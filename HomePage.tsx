@@ -24,11 +24,6 @@ const PORTAL_SECTIONS = [
 		href: "/academic-calendar/",
 		description: "Семестры, сессии, пересдачи и важные учебные даты.",
 	},
-	{
-		title: "Стипендии и поддержка",
-		href: "/scholarships/",
-		description: "Виды выплат, условия назначения и материальная помощь.",
-	},
 ];
 
 const QUICK_ACTIONS = [
@@ -50,7 +45,7 @@ const HomePage: React.FC = () => {
 					<h2 className="text-2xl md:text-3xl font-bold text-slate-900 mb-3">Все сервисы университета в одном месте</h2>
 					<p className="text-slate-700 leading-relaxed max-w-3xl">
 						Выбирайте нужный раздел без лишних переходов: учебные вопросы, документы, электронные обращения,
-						календарь и стипендии.
+						и календарь.
 					</p>
 				</section>
 

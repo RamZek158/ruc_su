@@ -60,9 +60,6 @@ const Layout: React.FC<LayoutProps> = ({ children, activeRoute, onNavigate }) =>
 							<a href="/academic-calendar/" className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors">
 								Учебный календарь <ExternalLink size={13} />
 							</a>
-							<a href="/scholarships/" className="flex items-center gap-1 text-gray-600 hover:text-gray-900 transition-colors">
-								Стипендии и поддержка <ExternalLink size={13} />
-							</a>
 						</div>
 
 						<div className="mt-6 pt-4 border-t border-gray-200 text-xs text-gray-500">

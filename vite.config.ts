@@ -18,7 +18,6 @@ export default defineConfig(({ mode }) => {
             documents: path.resolve(__dirname, 'documents/index.html'),
             services: path.resolve(__dirname, 'services/index.html'),
             academicCalendar: path.resolve(__dirname, 'academic-calendar/index.html'),
-            scholarships: path.resolve(__dirname, 'scholarships/index.html'),
           },
         },
       },

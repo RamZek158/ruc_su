@@ -4,14 +4,101 @@ from aiogram import Bot, Dispatcher, executor, types
 from aiogram.contrib.fsm_storage.memory import MemoryStorage
 from aiogram.dispatcher import FSMContext
 from aiogram.dispatcher.filters.state import State, StatesGroup
+from aiogram.utils import exceptions as aiogram_exceptions
+try:
+    from dotenv import load_dotenv
+except ModuleNotFoundError:
+    def load_dotenv() -> bool:
+        return False
+
+
+def _normalize_proxy_url(proxy_value: str) -> str:
+    proxy_value = proxy_value.strip()
+    if not proxy_value:
+        return ""
+    if "://" in proxy_value:
+        return proxy_value
+    return f"http://{proxy_value}"
+
+
+def _detect_windows_proxy() -> str | None:
+    if os.name != "nt":
+        return None
+
+    try:
+        import winreg
+    except ImportError:
+        return None
+
+    try:
+        with winreg.OpenKey(
+            winreg.HKEY_CURRENT_USER,
+            r"Software\Microsoft\Windows\CurrentVersion\Internet Settings",
+        ) as key:
+            proxy_enabled = winreg.QueryValueEx(key, "ProxyEnable")[0]
+            proxy_server = str(winreg.QueryValueEx(key, "ProxyServer")[0]).strip()
+    except OSError:
+        return None
+
+    if not proxy_enabled or not proxy_server:
+        return None
+
+    entries: dict[str, str] = {}
+    for chunk in proxy_server.split(";"):
+        if "=" not in chunk:
+            continue
+        protocol, address = chunk.split("=", 1)
+        protocol = protocol.strip().lower()
+        address = address.strip()
+        if address:
+            entries[protocol] = address
+
+    if entries:
+        if "https" in entries:
+            return _normalize_proxy_url(entries["https"])
+        if "http" in entries:
+            return _normalize_proxy_url(entries["http"])
+        socks_address = entries.get("socks5") or entries.get("socks")
+        if socks_address:
+            if "://" in socks_address:
+                return socks_address
+            return f"socks5://{socks_address}"
+
+    return _normalize_proxy_url(proxy_server)
 
 # ⚠️ ВАЖНО: Используйте переменные окружения для токенов!
-API_TOKEN = os.getenv("BOT_TOKEN", "8550276694:AAFR6pky9nJyxCHRLWhJcsJnnsIROcSEXSg")
-ADMIN_ID = int(os.getenv("ADMIN_ID", "892271347"))
+load_dotenv()
+
+API_TOKEN = os.getenv("BOT_TOKEN")
+ADMIN_ID_RAW = os.getenv("ADMIN_ID")
+PROXY_SOURCE = None
+env_proxy = os.getenv("TELEGRAM_PROXY") or os.getenv("HTTPS_PROXY") or os.getenv("https_proxy")
+if env_proxy:
+    TELEGRAM_PROXY = _normalize_proxy_url(env_proxy)
+    PROXY_SOURCE = "env"
+else:
+    TELEGRAM_PROXY = _detect_windows_proxy()
+    if TELEGRAM_PROXY:
+        PROXY_SOURCE = "windows"
+
+if not API_TOKEN:
+    raise RuntimeError("BOT_TOKEN is not set. Create bot/.env and set BOT_TOKEN=<token from @BotFather>.")
+
+if not ADMIN_ID_RAW:
+    raise RuntimeError("ADMIN_ID is not set. Create bot/.env and set ADMIN_ID=<your telegram id>.")
+
+try:
+    ADMIN_ID = int(ADMIN_ID_RAW)
+except ValueError as exc:
+    raise RuntimeError("ADMIN_ID must be an integer.") from exc
 
 logging.basicConfig(level=logging.INFO)
 
-bot = Bot(token=API_TOKEN)
+bot_kwargs = {"token": API_TOKEN}
+if TELEGRAM_PROXY:
+    bot_kwargs["proxy"] = TELEGRAM_PROXY
+
+bot = Bot(**bot_kwargs)
 dp = Dispatcher(bot, storage=MemoryStorage())
 
 # ---------- STATES ----------
@@ -219,7 +306,7 @@ async def process_comment(message: types.Message, state: FSMContext):
             f"📌 По теме: <b>{data['topic']}</b>\n"
             f"📅 Предпочитаемое время: <b>{data['preferred_date']}, {data['preferred_time']}</b>\n\n"
             "⏳ <b>Ожидайте звонка</b> для подтверждения точного времени приёма.\n\n"
-            "📞 С вами свяжутся по указанному номеру телефона: {data['phone']}\n\n"
+            f"📞 С вами свяжутся по указанному номеру телефона: {data['phone']}\n\n"
             "🔄 Чтобы записаться заново, отправьте /start",
             reply_markup=types.ReplyKeyboardRemove(),
             parse_mode="HTML"
@@ -304,6 +391,18 @@ async def specialists_info(message: types.Message):
 
 # ---------- RUN ----------
 if __name__ == "__main__":
-    print("🤖 Бот для записи мигрантов запущен...")
-    print("🌍 Специалисты: Бутова, Грибовская")
-    executor.start_polling(dp, skip_updates=True)
+    print("Migrant enrollment bot started...")
+    print("Specialists: Butova, Gribovskaya")
+    if TELEGRAM_PROXY:
+        source_hint = f" ({PROXY_SOURCE})" if PROXY_SOURCE else ""
+        print(f"Using proxy{source_hint}: {TELEGRAM_PROXY}")
+    else:
+        print("No proxy configured. Set TELEGRAM_PROXY in bot/.env if Telegram is blocked in your network.")
+
+    try:
+        executor.start_polling(dp, skip_updates=True)
+    except aiogram_exceptions.NetworkError as exc:
+        logging.error("Cannot connect to Telegram API (api.telegram.org:443).")
+        logging.error("Reason: %s", exc)
+        logging.error("Set TELEGRAM_PROXY in bot/.env, for example: TELEGRAM_PROXY=socks5://127.0.0.1:1080")
+        raise SystemExit(1)

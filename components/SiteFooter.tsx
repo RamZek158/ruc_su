@@ -18,7 +18,6 @@ const SiteFooter: React.FC = () => {
 						<li><a href="/documents/" className="hover:text-white transition-colors">Каталог документов</a></li>
 						<li><a href="/services/" className="hover:text-white transition-colors">Электронные сервисы</a></li>
 						<li><a href="/academic-calendar/" className="hover:text-white transition-colors">Учебный календарь</a></li>
-						<li><a href="/scholarships/" className="hover:text-white transition-colors">Стипендии и поддержка</a></li>
 					</ul>
 				</div>
 				<div>

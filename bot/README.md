@@ -1,111 +1,50 @@
-# 🤖 Telegram Бот для справок
+# Telegram Bot (Migration Appointments)
 
-## ⚠️ ВАЖНО: Безопасность!
-
-**ВАШ ТОКЕН БЫЛ ОПУБЛИКОВАН!** Срочно сделайте следующее:
-
-1. Зайдите к @BotFather в Telegram
-2. Отправьте команду `/mybots`
-3. Выберите вашего бота
-4. Нажмите "API Token"
-5. Нажмите "Revoke current token" (отозвать текущий токен)
-6. Получите новый токен
-
-## 📦 Установка
-
-### 1. Установите зависимости:
+## 1) Install
 
 ```bash
-pip install aiogram python-dotenv
+pip install -r requirements.txt
 ```
 
-### 2. Создайте файл .env:
+## 2) Configure env
 
-Скопируйте `.env.example` в `.env`:
+Create `.env` next to `bot.py`:
 
 ```bash
 cp .env.example .env
 ```
 
-Отредактируйте файл `.env` и укажите:
-- Ваш НОВЫЙ токен бота
-- Ваш Telegram ID (узнать можно у @userinfobot)
+Fill values:
 
-### 3. Добавьте .env в .gitignore:
+- `BOT_TOKEN` - token from `@BotFather`
+- `ADMIN_ID` - your Telegram user id
+- `TELEGRAM_PROXY` (optional) - required if your network blocks Telegram API
 
-Создайте файл `.gitignore` и добавьте туда:
+Note: on Windows, if `TELEGRAM_PROXY` is empty, the bot will try to use your system proxy from
+`Internet Settings` automatically.
 
-```
-.env
-__pycache__/
-*.pyc
-```
+Proxy examples:
 
-## 🚀 Запуск
+- `TELEGRAM_PROXY=socks5://127.0.0.1:1080`
+- `TELEGRAM_PROXY=http://127.0.0.1:8080`
 
-```bash
-python telegram_bot_fixed.py
-```
-
-## ✨ Что исправлено:
-
-1. ✅ **Безопасность**: Токен вынесен в переменные окружения
-2. ✅ **Команда /cancel**: Возможность отменить заполнение
-3. ✅ **Команда /help**: Справка по использованию
-4. ✅ **HTML форматирование**: Красивые сообщения
-5. ✅ **Обработка ошибок**: Если сообщение админу не отправится
-6. ✅ **Информация о пользователе**: ID и username в заявке
-7. ✅ **Сброс состояния**: При /start сбрасывается предыдущее состояние
-8. ✅ **Валидация**: Проверка правильности выбора варианта
-
-## 📝 Команды бота:
-
-- `/start` - Начать заполнение анкеты
-- `/cancel` - Отменить текущее заполнение
-- `/help` - Показать справку
-
-## 🔧 Дополнительные улучшения (опционально):
-
-### Использование python-dotenv:
-
-Если хотите автоматически загружать переменные из .env:
+## 3) Run
 
 ```bash
-pip install python-dotenv
+python bot.py
 ```
 
-Добавьте в начало файла:
+## Common startup error
 
-```python
-from dotenv import load_dotenv
-load_dotenv()
-```
+If you see:
 
-### Валидация данных:
+- `Cannot connect to host api.telegram.org:443`
+- `WinError 121`
 
-Можно добавить проверки:
-- Email (регулярное выражение)
-- Телефон (формат)
-- Дата рождения (формат ДД.ММ.ГГГГ)
-- СНИЛС (формат)
+then your machine cannot reach Telegram API directly. Use `TELEGRAM_PROXY` in `.env` or run the bot on a host/network with open access to Telegram.
 
-### База данных:
+## Security notes
 
-Для хранения заявок можно использовать:
-- SQLite (простой вариант)
-- PostgreSQL (для продакшена)
-
-## 📞 Поддержка
-
-Если возникнут вопросы:
-1. Проверьте, что токен правильный
-2. Проверьте, что ADMIN_ID правильный
-3. Убедитесь, что бот запущен
-4. Проверьте логи на ошибки
-
-## 🔒 Безопасность:
-
-- ❌ НИКОГДА не публикуйте токен бота
-- ❌ НИКОГДА не коммитьте .env файл в Git
-- ✅ ВСЕГДА используйте .gitignore
-- ✅ ВСЕГДА используйте переменные окружения
+- Never commit `.env`
+- Do not keep real tokens in source files
+- If token was exposed, revoke and regenerate it in `@BotFather`
